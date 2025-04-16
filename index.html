@@ -10,11 +10,14 @@
 <body>
   <div class="container">
     <h1>DALL·E 3 Generator</h1>
+    <div id="output" class="output"></div>
+
+    <div id="status" class="status"></div>
+    <div id="loader" class="loader hidden">Generating image...</div>
+
+
     <form id="imageForm">
-      <label>
-        Prompt:
-        <input type="text" id="prompt" placeholder="Enter your prompt" required />
-      </label>
+ 
       <label>
         Size:
         <select id="size">
@@ -27,11 +30,15 @@
         Quantity:
         <input type="number" id="n" value="1" min="1" max="4" />
       </label>
+         <label class="prompt-label">
+        Prompt:
+        <input type="text" id="prompt" placeholder="Enter your prompt" required />
+      </label>
       <button type="submit">Generate</button>
     </form>
-    <div id="output"></div>
+
   </div>
   <!-- Move script tag here to ensure DOM is ready -->
-  <script src="script.js"></script>
+  <script src="script_1.js"></script>
 </body>
 </html>
