@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const bsonData = BSON.serialize(payload);
     try {
-      const res = await fetch("http://localhost:4000/api/image/dalle3/bson", {
+      const res = await fetch("https://dalle3-pytthon-server.vercel.app/api/image/dalle3/bson", {
         method: "POST",
         headers: {
           "Content-Type": "application/bson",
