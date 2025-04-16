@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DALL·E 3 Image Relay (BSON)</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Ensure BSON library is included before script.js -->
+  <script src="https://unpkg.com/bson@4.7.2/dist/bson.browser.umd.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>DALL·E 3 Generator</h1>
+    <form id="imageForm">
+      <label>
+        Prompt:
+        <input type="text" id="prompt" placeholder="Enter your prompt" required />
+      </label>
+      <label>
+        Size:
+        <select id="size">
+          <option value="1024x1024">1024x1024</option>
+          <option value="1792x1024">1792x1024</option>
+          <option value="1024x1792">1024x1792</option>
+        </select>
+      </label>
+      <label>
+        Quantity:
+        <input type="number" id="n" value="1" min="1" max="4" />
+      </label>
+      <button type="submit">Generate</button>
+    </form>
+    <div id="output"></div>
+  </div>
+  <!-- Move script tag here to ensure DOM is ready -->
+  <script src="script.js"></script>
+</body>
+</html>
