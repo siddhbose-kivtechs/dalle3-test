@@ -1,0 +1,187 @@
+body {
+  font-family: system-ui, sans-serif;
+  background: #1e1e2e; /* Catpuccin Base */
+  color: #cdd6f4; /* Catpuccin Text */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+.container {
+  margin-top: 40px;
+  background: #181825; /* Catpuccin Mantle */
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 12px #0008;
+  max-width: 700px; /* Slightly wider to accommodate the larger input */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  text-align: center;
+  color: #cba6f7; /* Catpuccin Mauve (as a nice accent) */
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+textarea,
+input,
+select {
+  padding: 0.75rem; /* Slightly increased padding */
+  border: 1px solid #313244; /* Catpuccin Surface0 for a subtle border */
+  border-radius: 8px; /* Slightly more rounded */
+  font-size: 1rem;
+  background: #1e1e2e; /* Catpuccin Base */
+  color: #cdd6f4; /* Catpuccin Text */
+}
+
+button {
+  padding: 0.8rem 1.5rem; /* Adjusted padding */
+  font-size: 1.1rem; /* Slightly larger font */
+  background-color: #a6e3a1; /* Catpuccin Green (as a primary action color) */
+  color: #11111b; /* Catpuccin Crust (dark text on the button) */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease; /* Smooth transition for hover */
+}
+
+button:hover {
+  background-color: #94e2d5; /* Catpuccin Teal (a slightly different shade on hover) */
+}
+
+.output {
+  margin-bottom: 2rem; /* Output at the top */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Increased gap for better separation */
+}
+
+.output img {
+  max-width: 100%;
+  border-radius: 8px;
+  border: 2px solid #cba6f7; /* Catpuccin Mauve for image border */
+}
+
+/* For the status messages */
+.status {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.status.loading {
+  background-color: #313244; /* Catpuccin Surface0 */
+  color: #fabd2f; /* Catpuccin Peach */
+}
+
+.status.success {
+  background-color: #2c6e49; /* Similar to your original success color */
+  color: #a6e3a1; /* Catpuccin Green */
+}
+
+.status.error {
+  background-color: #7b1e1e; /* Similar to your original error color */
+  color: #f38ba8; /* Catpuccin Red */
+}
+
+.status.warning {
+  background-color: #55501e; /* Similar to your original warning color */
+  color: #f9e2af; /* Catpuccin Yellow */
+}
+
+/* Image display - Adjusted for Catpuccin */
+.images-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.image-item {
+  border: 1px solid #45475a; /* Catpuccin Overlay1 for a subtle border */
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #1e1e2e; /* Catpuccin Base */
+}
+
+.generated-image {
+  max-width: 100%;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border: 1px solid #585c70; /* Catpuccin Overlay2 */
+}
+
+.image-url input {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  background: #313244; /* Catpuccin Surface0 */
+  color: #cdd6f4; /* Catpuccin Text */
+  border: 1px solid #45475a; /* Catpuccin Overlay1 */
+  margin-bottom: 0.5rem;
+}
+
+.copy-url-btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  background-color: #74c7ec; /* Catpuccin Sapphire */
+  color: #11111b; /* Catpuccin Crust */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.copy-url-btn:hover {
+  background-color: #89b4fa; /* Catpuccin Sky */
+}
+
+/* Prompt styling like chat box */
+.prompt-label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem; /* Add some space below the label */
+}
+
+textarea#prompt {
+  min-height: 120px; /* Increased min-height for a larger input */
+  font-size: 1.1rem;
+  resize: vertical;
+  line-height: 1.6; /* Improved line height for better readability */
+  padding: 0.8rem; /* Adjusted padding */
+}
+
+/* Loader styling */
+.loader {
+  color: #cba6f7; /* Catpuccin Mauve */
+  text-align: center;
+  padding: 1rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+  animation: pulse 1.2s infinite;
+}
+
+.hidden {
+  display: none;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
