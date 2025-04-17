@@ -1,83 +1,229 @@
+
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("imageForm");
   const output = document.getElementById("output");
+  const loader = document.getElementById("loader");
+  const status = document.getElementById("status");
+  
+  // Get the original input element
+  let promptInput = document.getElementById("prompt");
+  
+  // Convert input to auto-expandable field and store the NEW reference
+  promptInput = convertToAutoExpandingInput(promptInput);
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const prompt = document.getElementById("prompt").value;
+
+    // Fix: Properly trim and check prompt value from the current textarea
+    const prompt = promptInput.value.trim();
+    if (!prompt || prompt.length === 0) {
+      showStatus("Please enter a prompt", "error");
+      promptInput.classList.add("error");
+      return;
+    }
+
+    // Clear any previous error states
+    clearErrorState(promptInput);
+
     const size = document.getElementById("size").value;
     const n = parseInt(document.getElementById("n").value);
     const payload = { prompt, size, n };
-    
-    output.innerHTML = "<p>Generating images, please wait...</p>";
-    
-    // BSON encode
+
+    loader.classList.remove("hidden"); // Show loader
+    output.innerHTML = ""; // Clear previous output
+    showStatus("Generating image...", "loading");
+
     const bsonData = BSON.serialize(payload);
     try {
-      // Send the BSON payload to the backend server
-      const res = await fetch("http://localhost:4000/api/image/dalle3/bson", {
+      const res = await fetch("https://dalle3-backend-1.onrender.com/api/image/dalle3/bson", {
         method: "POST",
         headers: {
           "Content-Type": "application/bson",
         },
         body: bsonData,
       });
-      // Log the response status and headers for debugging
+
       console.log("Server Response Status: ", res.status);
       console.log("Response Headers: ", res.headers);
+
       if (res.ok && res.headers.get("Content-Type") === "application/bson") {
         const buffer = await res.arrayBuffer();
         const result = BSON.deserialize(new Uint8Array(buffer));
-        // Log the result to inspect the response data
         console.log("Server Response Data: ", result);
-        renderImages(result); // Pass the response data to renderImages function
+
+        if (result.error) {
+          handleErrorResponse(result.error);
+        } else {
+          renderImages(result);
+          showStatus("Image generated successfully!", "success");
+        }
       } else {
-        const text = await res.text();
-        output.innerHTML = `<pre>Server error: ${text}</pre>`;
+        try {
+          const text = await res.text();
+          // Try to parse as JSON first
+          try {
+            const errorData = JSON.parse(text);
+            handleErrorResponse(errorData.error || { message: text });
+          } catch (parseErr) {
+            // If not JSON, just display the text
+            output.innerHTML = `<pre>Server error: ${text}</pre>`;
+            showStatus("Server error occurred", "error");
+          }
+        } catch (textErr) {
+          output.innerHTML = `<pre>Server error: Unable to read response</pre>`;
+          showStatus("Server error occurred", "error");
+        }
       }
     } catch (err) {
       output.innerHTML = `<pre>Request failed: ${err.message}</pre>`;
+      showStatus("Request failed", "error");
+    } finally {
+      loader.classList.add("hidden"); // Hide loader
     }
   });
-  
-  function renderImages(data) {
-    output.innerHTML = ""; // Clear the output area
-    console.log("Rendered Images Data: ", data); // Log the images data
+
+  // Add input event listener to clear error state when user types
+  promptInput.addEventListener("input", function() {
+    if (this.value.trim().length > 0) {
+      clearErrorState(this);
+    }
+  });
+
+  function clearErrorState(element) {
+    element.classList.remove("error");
+    const errorElement = document.querySelector(".prompt-error");
+    if (errorElement) {
+      errorElement.remove();
+    }
+  }
+
+  function handleErrorResponse(error) {
+    let errorMessage = "An error occurred";
     
-    // Create container for all images
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error.message) {
+      errorMessage = error.message;
+
+      // Handle specific error cases
+      if (error.code === "invalidPayload" && error.message.includes("n=1")) {
+        errorMessage = "Multiple images are not available with your current plan. Please select quantity = 1.";
+      }
+    }
+
+    output.innerHTML = `
+      <div class="error-container">
+        <div class="error-icon">⚠️</div>
+        <div class="error-message">${errorMessage}</div>
+      </div>
+    `;
+    showStatus(errorMessage, "error");
+  }
+
+  function showStatus(message, type) {
+    status.textContent = message;
+    status.className = "status";
+    if (type) status.classList.add(type);
+    
+    // Auto-hide success messages after 5 seconds
+    if (type === "success") {
+      setTimeout(() => {
+        status.classList.remove("success");
+        status.textContent = "";
+      }, 5000);
+    }
+  }
+
+  function convertToAutoExpandingInput(element) {
+    // Create a div to contain our elements
+    const container = document.createElement("div");
+    container.className = "auto-expanding-input-container";
+    
+    // Create the textarea
+    const textarea = document.createElement("textarea");
+    textarea.id = element.id;
+    textarea.name = element.name;
+    textarea.placeholder = element.placeholder || "Enter your prompt";
+    textarea.required = element.required;
+    textarea.value = element.value;
+    textarea.className = "auto-expanding-input";
+    textarea.rows = 3; // Default rows
+    
+    // Replace the input with our container and add the textarea
+    element.parentNode.replaceChild(container, element);
+    container.appendChild(textarea);
+    
+    // Add event listener to auto-expand
+    textarea.addEventListener("input", function() {
+      // Reset height to auto and then set to scrollHeight
+      this.style.height = "auto";
+      this.style.height = (this.scrollHeight) + "px";
+      
+      // Clear any error messages when user starts typing
+      if (this.value.trim().length > 0 && this.classList.contains("error")) {
+        clearErrorState(this);
+      }
+    });
+    
+    // Initial adjustment
+    setTimeout(() => {
+      textarea.style.height = "auto";
+      textarea.style.height = (textarea.scrollHeight) + "px";
+    }, 0);
+    
+    // Return the new textarea element
+    return textarea;
+  }
+
+  function renderImages(data) {
+    output.innerHTML = ""; // Clear output
+
     const imagesContainer = document.createElement("div");
     imagesContainer.className = "images-container";
-    
-    // Handle both response formats: data.data array or data.images array
+
     const imageItems = data.data || data.images || [];
-    
+
     if (Array.isArray(imageItems) && imageItems.length > 0) {
+      // First, show the prompt that was used
+      const promptDisplay = document.createElement("div");
+      promptDisplay.className = "prompt-text";
+      // Use the updated promptInput reference
+      promptDisplay.innerHTML = `<p>Prompt Used:</p><p>${promptInput.value}</p>`;
+      output.appendChild(promptDisplay);
+
       imageItems.forEach((item, i) => {
-        // Create a container for each image and its URL
         const imageContainer = document.createElement("div");
         imageContainer.className = "image-item";
-        
-        // Extract URL depending on response format
+
         const imageUrl = typeof item === 'object' ? item.url : item;
-        
+
         if (imageUrl) {
-          // Create and append image
           const img = document.createElement("img");
           img.src = imageUrl;
           img.alt = `Generated Image ${i + 1}`;
           img.className = "generated-image";
-          imageContainer.appendChild(img);
           
-          // Create and append URL display
+          // Add loading animation
+          img.style.opacity = "0";
+          img.onload = function() {
+            this.style.transition = "opacity 0.5s ease";
+            this.style.opacity = "1";
+          };
+          
+          imageContainer.appendChild(img);
+
           const urlDisplay = document.createElement("div");
           urlDisplay.className = "image-url";
           urlDisplay.innerHTML = `<p>Image URL:</p><input type="text" value="${imageUrl}" readonly onClick="this.select();" />`;
           imageContainer.appendChild(urlDisplay);
-          
-          // Add a copy button
+
+          const actionButtons = document.createElement("div");
+          actionButtons.className = "action-buttons";
+
           const copyButton = document.createElement("button");
           copyButton.textContent = "Copy URL";
           copyButton.className = "copy-url-btn";
-          copyButton.onclick = function() {
+          copyButton.onclick = function () {
             navigator.clipboard.writeText(imageUrl)
               .then(() => {
                 this.textContent = "Copied!";
@@ -89,60 +235,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error('Failed to copy: ', err);
               });
           };
-          urlDisplay.appendChild(copyButton);
+          actionButtons.appendChild(copyButton);
+
+          // Add Download Button
+          const downloadButton = document.createElement("a");
+          downloadButton.href = imageUrl;
+          downloadButton.download = `dalle3_image_${i + 1}.png`; // Suggest a filename
+          downloadButton.textContent = "Download";
+          downloadButton.className = "download-btn";
+          actionButtons.appendChild(downloadButton);
           
-          // Add container to the main container
+          imageContainer.appendChild(actionButtons);
           imagesContainer.appendChild(imageContainer);
         }
       });
-      
+
       output.appendChild(imagesContainer);
-      
-      // Add some basic CSS if not already in style.css
-      if (!document.getElementById("image-display-styles")) {
-        const style = document.createElement("style");
-        style.id = "image-display-styles";
-        style.textContent = `
-          .images-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 20px;
-          }
-          .image-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-          }
-          .generated-image {
-            max-width: 100%;
-            margin-bottom: 10px;
-          }
-          .image-url {
-            margin-top: 10px;
-          }
-          .image-url input {
-            width: 100%;
-            padding: 5px;
-            margin-bottom: 5px;
-            font-size: 14px;
-          }
-          .copy-url-btn {
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-          }
-          .copy-url-btn:hover {
-            background-color: #45a049;
-          }
-        `;
-        document.head.appendChild(style);
-      }
     } else {
-      output.innerHTML = "<pre>No images found in response</pre>";
+      output.innerHTML = "<div class='error-container'><p>No images found in response</p></div>";
     }
   }
 });
